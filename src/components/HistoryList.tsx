@@ -1,13 +1,14 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { AudioPlayer } from "@/components/AudioPlayer";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { History, Loader2, Trash2, XCircle } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { History, Trash2, Loader2 } from "lucide-react";
+import { useUserSession } from "@/hooks/useUserSession";
 
-interface AudioGeneration {
+interface HistoryItem { // Renamed from AudioGeneration
   id: string;
   prompt: string;
   voiceId: string;
@@ -15,43 +16,56 @@ interface AudioGeneration {
   createdAt: string;
 }
 
-interface HistoryListProps {
-  refreshTrigger: number;
-}
-
-export function HistoryList({ refreshTrigger }: HistoryListProps) {
-  const [history, setHistory] = useState<AudioGeneration[]>([]);
+export function HistoryList() {
+  const [history, setHistory] = useState<HistoryItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [isDeleting, setIsDeleting] = useState<string | null>(null);
+  const [isDeleting, setIsDeleting] = useState<string | null>(null); // ID of item being deleted
+  const [isClearing, setIsClearing] = useState(false);
+  const userId = useUserSession();
 
-  const fetchHistory = async () => {
+  const fetchHistory = useCallback(async () => {
+    if (!userId) return;
     setIsLoading(true);
     try {
-      const res = await fetch("/api/history");
-      if (res.ok) {
-        const data = await res.json();
+      const response = await fetch("/api/history", {
+        headers: { "X-User-Id": userId }
+      });
+      if (response.ok) {
+        const data = await response.json();
         setHistory(data);
       }
     } catch (error) {
-      console.error("Failed to fetch history", error);
+      console.error("Failed to fetch history:", error);
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [userId]);
 
   useEffect(() => {
     fetchHistory();
-  }, [refreshTrigger]);
+  }, [fetchHistory]);
+
+  // Listen for refresh events
+  useEffect(() => {
+    const handleRefresh = () => fetchHistory();
+    window.addEventListener('refreshHistory', handleRefresh);
+    return () => window.removeEventListener('refreshHistory', handleRefresh);
+  }, [fetchHistory]);
 
   const handleDelete = async (id: string) => {
+    if (!userId) return;
     setIsDeleting(id);
     try {
-      const res = await fetch(`/api/history/${id}`, { method: "DELETE" });
-      if (res.ok) {
-        setHistory((prev) => prev.filter((item) => item.id !== id));
+      const response = await fetch(`/api/history/${id}`, {
+        method: 'DELETE',
+        headers: { "X-User-Id": userId }
+      });
+      
+      if (response.ok) {
+        setHistory(prev => prev.filter(item => item.id !== id));
       }
     } catch (error) {
-      console.error("Failed to delete item", error);
+      console.error("Failed to delete item:", error);
     } finally {
       setIsDeleting(null);
     }
@@ -59,16 +73,21 @@ export function HistoryList({ refreshTrigger }: HistoryListProps) {
 
   const handleClearAll = async () => {
     if (!confirm("Are you sure you want to clear all history?")) return;
-    setIsDeleting("all");
+    if (!userId) return;
+    setIsClearing(true);
     try {
-      const res = await fetch("/api/history", { method: "DELETE" });
-      if (res.ok) {
+      const response = await fetch('/api/history', {
+        method: 'DELETE',
+        headers: { "X-User-Id": userId }
+      });
+      
+      if (response.ok) {
         setHistory([]);
       }
     } catch (error) {
-      console.error("Failed to clear history", error);
+      console.error("Failed to clear history:", error);
     } finally {
-      setIsDeleting(null);
+      setIsClearing(false);
     }
   };
 
@@ -84,11 +103,15 @@ export function HistoryList({ refreshTrigger }: HistoryListProps) {
             variant="ghost"
             size="sm"
             onClick={handleClearAll}
-            disabled={!!isDeleting}
-            className="text-red-400 hover:text-red-300 hover:bg-red-950/30 h-8 px-2 text-xs"
+            disabled={isClearing}
+            className="text-zinc-400 hover:text-red-400 hover:bg-red-400/10"
             aria-label="Clear History"
           >
-            <XCircle className="mr-1 h-3 w-3" />
+            {isClearing ? (
+              <Loader2 className="h-4 w-4 animate-spin mr-2" />
+            ) : (
+              <Trash2 className="h-4 w-4 mr-2" />
+            )}
             Clear All
           </Button>
         )}
@@ -110,13 +133,13 @@ export function HistoryList({ refreshTrigger }: HistoryListProps) {
                   key={item.id}
                   className="p-4 rounded-lg bg-zinc-950/50 border border-zinc-800 space-y-3 group relative"
                 >
-                  <div className="flex justify-between items-start gap-4">
-                    <p className="text-sm text-zinc-300 line-clamp-2 font-medium pr-8">
+                  <div className="pr-8 space-y-1">
+                    <p className="text-sm text-zinc-300 line-clamp-2 font-medium">
                       &quot;{item.prompt}&quot;
                     </p>
-                    <span className="text-xs text-zinc-500 whitespace-nowrap">
+                    <p className="text-xs text-zinc-500">
                       {new Date(item.createdAt).toLocaleDateString()}
-                    </span>
+                    </p>
                   </div>
                   
                   <Button
@@ -134,7 +157,7 @@ export function HistoryList({ refreshTrigger }: HistoryListProps) {
                     )}
                   </Button>
 
-                  <AudioPlayer audioUrl={item.audioData} />
+                  <AudioPlayer audioUrl={`data:audio/mpeg;base64,${item.audioData}`} />
                 </div>
               ))}
             </div>

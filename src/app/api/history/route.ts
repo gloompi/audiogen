@@ -3,9 +3,16 @@ import { prisma } from '@/lib/prisma';
 
 export const dynamic = 'force-dynamic';
 
-export async function GET() {
+export async function GET(request: Request) {
+  const userId = request.headers.get('X-User-Id');
+  
+  if (!userId) {
+    return NextResponse.json({ error: 'User ID required' }, { status: 400 });
+  }
+
   try {
     const history = await prisma.audioGeneration.findMany({
+      where: { userId },
       orderBy: {
         createdAt: 'desc',
       },
@@ -17,9 +24,17 @@ export async function GET() {
   }
 }
 
-export async function DELETE() {
+export async function DELETE(request: Request) {
+  const userId = request.headers.get('X-User-Id');
+
+  if (!userId) {
+    return NextResponse.json({ error: 'User ID required' }, { status: 400 });
+  }
+
   try {
-    await prisma.audioGeneration.deleteMany();
+    await prisma.audioGeneration.deleteMany({
+      where: { userId }
+    });
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error("Clear History Error:", error);

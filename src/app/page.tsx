@@ -1,14 +1,12 @@
 "use client";
 
-import { useState } from "react";
 import { GeneratorForm } from "@/components/GeneratorForm";
 import { HistoryList } from "@/components/HistoryList";
 
 export default function Home() {
-  const [refreshTrigger, setRefreshTrigger] = useState(0);
-
   const handleSuccess = () => {
-    setRefreshTrigger((prev) => prev + 1);
+    // Dispatch event to refresh history
+    window.dispatchEvent(new Event('refreshHistory'));
   };
 
   return (
@@ -46,7 +44,7 @@ export default function Home() {
           </div>
 
           <div className="lg:col-span-7">
-            <HistoryList refreshTrigger={refreshTrigger} />
+            <HistoryList />
           </div>
         </div>
       </div>

@@ -24,6 +24,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useUserSession } from "@/hooks/useUserSession";
 
 const formSchema = z.object({
   prompt: z.string().min(3, "Prompt must be at least 3 characters"),
@@ -36,32 +37,35 @@ const VOICES = [
   { id: "AZnzlk1XvdvUeBnXmlld", name: "Domi" },
   { id: "EXAVITQu4vr4xnSDxMaL", name: "Bella" },
   { id: "ErXwobaYiN019PkySvjV", name: "Antoni" },
+  { id: "JBFqnCBsd6RMkjVDRZzb", name: "Adam" },
 ];
 
-interface GeneratorFormProps {
-  onSuccess: () => void;
-}
-
-export function GeneratorForm({ onSuccess }: GeneratorFormProps) {
+export function GeneratorForm({ onSuccess }: { onSuccess: () => void }) {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const userId = useUserSession();
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       prompt: "",
-      voiceId: "21m00Tcm4TlvDq8ikWAM",
+      voiceId: "JBFqnCBsd6RMkjVDRZzb",
     },
   });
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
+    if (!userId) {
+      setError("Initializing session...");
+      return;
+    }
+
     setIsLoading(true);
     setError(null);
     try {
       const response = await fetch("/api/generate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(values),
+        body: JSON.stringify({ ...values, userId }),
       });
 
       if (!response.ok) {

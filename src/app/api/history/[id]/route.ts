@@ -5,14 +5,25 @@ export async function DELETE(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  try {
-    const { id } = await params;
+  const userId = request.headers.get('X-User-Id');
+  const { id } = await params;
 
-    await prisma.audioGeneration.delete({
-      where: {
-        id: id,
+  if (!userId) {
+    return NextResponse.json({ error: 'User ID required' }, { status: 400 });
+  }
+
+  try {
+    // Only delete if it belongs to the user
+    const result = await prisma.audioGeneration.deleteMany({
+      where: { 
+        id,
+        userId 
       },
     });
+
+    if (result.count === 0) {
+      return NextResponse.json({ error: 'Item not found or unauthorized' }, { status: 404 });
+    }
 
     return NextResponse.json({ success: true });
   } catch (error) {

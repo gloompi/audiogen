@@ -11,6 +11,7 @@ model AudioGeneration {
   id        String   @id @default(cuid())
   prompt    String
   voiceId   String
+  userId    String   // Client-side session ID
   audioData String   @db.Text // Storing base64 audio data
   createdAt DateTime @default(now())
 }

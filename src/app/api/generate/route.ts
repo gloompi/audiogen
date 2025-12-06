@@ -10,48 +10,81 @@ const generateSchema = z.object({
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { prompt, voiceId } = generateSchema.parse(body);
+    const { prompt, voiceId, userId } = body;
 
-    const apiKey = process.env.ELEVENLABS_API_KEY;
-    if (!apiKey) {
-      return NextResponse.json({ error: 'ElevenLabs API Key not configured' }, { status: 500 });
+    if (!userId) {
+      return NextResponse.json(
+        { error: 'User ID is required' },
+        { status: 400 }
+      );
     }
 
-    const response = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${voiceId}`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'xi-api-key': apiKey,
-      },
-      body: JSON.stringify({
-        text: prompt,
-        model_id: 'eleven_turbo_v2_5',
-        voice_settings: {
-          stability: 0.5,
-          similarity_boost: 0.5,
+    // Validate input
+    const validationResult = generateSchema.safeParse({ prompt, voiceId });
+    
+    if (!validationResult.success) {
+      return NextResponse.json(
+        { error: 'Invalid input', issues: validationResult.error.issues },
+        { status: 400 }
+      );
+    }
+
+    const validatedPrompt = validationResult.data.prompt;
+    const validatedVoiceId = validationResult.data.voiceId;
+
+    // 2. Call ElevenLabs API
+    const ELEVENLABS_API_KEY = process.env.ELEVENLABS_API_KEY;
+    
+    if (!ELEVENLABS_API_KEY) {
+      return NextResponse.json(
+        { error: 'Server configuration error' },
+        { status: 500 }
+      );
+    }
+
+    const response = await fetch(
+      `https://api.elevenlabs.io/v1/text-to-speech/${validatedVoiceId}`,
+      {
+        method: 'POST',
+        headers: {
+          'Accept': 'audio/mpeg',
+          'Content-Type': 'application/json',
+          'xi-api-key': ELEVENLABS_API_KEY,
         },
-      }),
-    });
+        body: JSON.stringify({
+          text: validatedPrompt,
+          model_id: 'eleven_turbo_v2_5',
+          voice_settings: {
+            stability: 0.5,
+            similarity_boost: 0.5,
+          },
+        }),
+      }
+    );
 
     if (!response.ok) {
-        const errorText = await response.text();
-        console.error("ElevenLabs API Error:", errorText);
-        return NextResponse.json({ error: 'Failed to generate audio', details: errorText }, { status: response.status });
+      const errorData = await response.json().catch(() => ({}));
+      console.error('ElevenLabs API Error:', errorData);
+      return NextResponse.json(
+        { error: 'Failed to generate audio', details: errorData },
+        { status: response.status }
+      );
     }
 
     const audioBuffer = await response.arrayBuffer();
     const audioBase64 = Buffer.from(audioBuffer).toString('base64');
-    const audioData = `data:audio/mpeg;base64,${audioBase64}`;
 
-    const generation = await prisma.audioGeneration.create({
+    // 3. Save to Database
+    const record = await prisma.audioGeneration.create({
       data: {
-        prompt,
-        voiceId,
-        audioData,
+        prompt: validatedPrompt,
+        voiceId: validatedVoiceId,
+        userId,
+        audioData: audioBase64,
       },
     });
 
-    return NextResponse.json(generation);
+    return NextResponse.json(record);
 
   } catch (error) {
     console.error("Generation Error:", error);
