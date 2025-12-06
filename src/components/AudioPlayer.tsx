@@ -31,7 +31,11 @@ export function AudioPlayer({ audioUrl, className }: AudioPlayerProps) {
       barRadius: 3,
     });
 
-    wavesurfer.current.load(audioUrl);
+    wavesurfer.current.load(audioUrl).catch((err) => {
+      // Ignore abort errors which happen on cleanup
+      if (err.name === 'AbortError' || err.message?.includes('aborted')) return;
+      console.error("Error loading audio:", err);
+    });
 
     wavesurfer.current.on("ready", () => {
       setIsReady(true);
@@ -42,7 +46,12 @@ export function AudioPlayer({ audioUrl, className }: AudioPlayerProps) {
     });
 
     return () => {
-      wavesurfer.current?.destroy();
+      try {
+        wavesurfer.current?.destroy();
+      } catch (e) {
+        // Ignore abort errors during cleanup
+        console.warn("Wavesurfer cleanup error:", e);
+      }
     };
   }, [audioUrl]);
 

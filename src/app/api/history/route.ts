@@ -16,3 +16,13 @@ export async function GET() {
     return NextResponse.json({ error: 'Failed to fetch history' }, { status: 500 });
   }
 }
+
+export async function DELETE() {
+  try {
+    await prisma.audioGeneration.deleteMany();
+    return NextResponse.json({ success: true });
+  } catch (error) {
+    console.error("Clear History Error:", error);
+    return NextResponse.json({ error: 'Failed to clear history' }, { status: 500 });
+  }
+}
