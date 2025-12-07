@@ -8,6 +8,8 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { History, Trash2, Loader2 } from "lucide-react";
 import { useUserSession } from "@/hooks/useUserSession";
 
+import { CONFIG } from "@/lib/config";
+
 interface HistoryItem { // Renamed from AudioGeneration
   id: string;
   prompt: string;
@@ -27,7 +29,7 @@ export function HistoryList() {
     if (!userId) return;
     setIsLoading(true);
     try {
-      const response = await fetch("/api/history", {
+      const response = await fetch(CONFIG.API.HISTORY, {
         headers: { "X-User-Id": userId }
       });
       if (response.ok) {
@@ -66,7 +68,7 @@ export function HistoryList() {
     if (!userId) return;
     setIsDeleting(id);
     try {
-      const response = await fetch(`/api/history/${id}`, {
+      const response = await fetch(`${CONFIG.API.HISTORY}/${id}`, {
         method: 'DELETE',
         headers: { "X-User-Id": userId }
       });
@@ -86,7 +88,7 @@ export function HistoryList() {
     if (!userId) return;
     setIsClearing(true);
     try {
-      const response = await fetch('/api/history', {
+      const response = await fetch(CONFIG.API.HISTORY, {
         method: 'DELETE',
         headers: { "X-User-Id": userId }
       });

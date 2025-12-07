@@ -26,19 +26,12 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useUserSession } from "@/hooks/useUserSession";
 
+import { CONFIG } from "@/lib/config";
+
 const formSchema = z.object({
   prompt: z.string().min(3, "Prompt must be at least 3 characters"),
   voiceId: z.string().min(1, "Please select a voice"),
 });
-
-// Example voices (You can fetch these from API too, but hardcoding for demo is faster)
-const VOICES = [
-  { id: "21m00Tcm4TlvDq8ikWAM", name: "Rachel" },
-  { id: "AZnzlk1XvdvUeBnXmlld", name: "Domi" },
-  { id: "EXAVITQu4vr4xnSDxMaL", name: "Bella" },
-  { id: "ErXwobaYiN019PkySvjV", name: "Antoni" },
-  { id: "JBFqnCBsd6RMkjVDRZzb", name: "Adam" },
-];
 
 export function GeneratorForm({ onSuccess }: { onSuccess: (newItem?: any) => void }) {
   const [isLoading, setIsLoading] = useState(false);
@@ -49,7 +42,7 @@ export function GeneratorForm({ onSuccess }: { onSuccess: (newItem?: any) => voi
     resolver: zodResolver(formSchema),
     defaultValues: {
       prompt: "",
-      voiceId: "JBFqnCBsd6RMkjVDRZzb",
+      voiceId: CONFIG.DEFAULT_VOICE_ID,
     },
   });
 
@@ -62,7 +55,7 @@ export function GeneratorForm({ onSuccess }: { onSuccess: (newItem?: any) => voi
     setIsLoading(true);
     setError(null);
     try {
-      const response = await fetch("/api/generate", {
+      const response = await fetch(CONFIG.API.GENERATE, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ ...values, userId }),
@@ -132,7 +125,7 @@ export function GeneratorForm({ onSuccess }: { onSuccess: (newItem?: any) => voi
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent className="bg-zinc-900 border-zinc-800 text-white">
-                      {VOICES.map((voice) => (
+                      {CONFIG.VOICES.map((voice) => (
                         <SelectItem key={voice.id} value={voice.id}>
                           {voice.name}
                         </SelectItem>

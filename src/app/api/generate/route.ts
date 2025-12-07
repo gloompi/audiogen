@@ -2,6 +2,8 @@ import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { z } from 'zod';
 
+import { CONFIG } from '@/lib/config';
+
 const generateSchema = z.object({
   prompt: z.string().min(1),
   voiceId: z.string().min(1),
@@ -37,7 +39,7 @@ export async function POST(request: Request) {
     }
 
     const response = await fetch(
-      `https://api.elevenlabs.io/v1/text-to-speech/${validatedVoiceId}`,
+      `${CONFIG.API.ELEVENLABS.BASE_URL}/${validatedVoiceId}`,
       {
         method: 'POST',
         headers: {
@@ -47,7 +49,7 @@ export async function POST(request: Request) {
         },
         body: JSON.stringify({
           text: validatedPrompt,
-          model_id: 'eleven_turbo_v2_5',
+          model_id: CONFIG.API.ELEVENLABS.MODEL_ID,
           voice_settings: {
             stability: 0.5,
             similarity_boost: 0.5,
