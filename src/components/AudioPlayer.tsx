@@ -91,7 +91,7 @@ export function AudioPlayer({ audioUrl, prompt, className }: AudioPlayerProps) {
       <Button
         size="icon"
         variant="ghost"
-        className="h-10 w-10 rounded-full bg-indigo-600/10 hover:bg-indigo-600/20 text-indigo-400 hover:text-indigo-300"
+        className="h-10 w-10 rounded-full bg-indigo-600/10 hover:bg-indigo-600/20 text-indigo-400 hover:text-indigo-300 cursor-pointer"
         onClick={togglePlay}
         disabled={!isReady}
       >
@@ -103,7 +103,7 @@ export function AudioPlayer({ audioUrl, prompt, className }: AudioPlayerProps) {
       <Button
         size="icon"
         variant="ghost"
-        className="h-8 w-8 text-zinc-400 hover:text-white"
+        className="h-8 w-8 text-zinc-400 hover:text-white cursor-pointer"
         onClick={downloadAudio}
       >
         <Download className="h-4 w-4" />

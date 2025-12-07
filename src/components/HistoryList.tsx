@@ -116,7 +116,7 @@ export function HistoryList() {
             size="sm"
             onClick={handleClearAll}
             disabled={isClearing}
-            className="text-zinc-400 hover:text-red-400 hover:bg-red-400/10"
+            className="text-zinc-400 hover:text-red-400 hover:bg-red-400/10 cursor-pointer"
             aria-label="Clear History"
           >
             {isClearing ? (
@@ -159,7 +159,7 @@ export function HistoryList() {
                     size="icon"
                     onClick={() => handleDelete(item.id)}
                     disabled={isDeleting === item.id}
-                    className="absolute top-2 right-2 h-6 w-6 text-zinc-600 hover:text-red-400 hover:bg-red-950/20 opacity-0 group-hover:opacity-100 transition-opacity"
+                    className="absolute top-2 right-2 h-6 w-6 text-zinc-600 hover:text-red-400 hover:bg-red-950/20 opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
                     aria-label="Delete"
                   >
                     {isDeleting === item.id ? (

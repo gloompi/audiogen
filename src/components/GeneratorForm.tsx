@@ -148,7 +148,7 @@ export function GeneratorForm({ onSuccess }: { onSuccess: (newItem?: any) => voi
 
             <Button
               type="submit"
-              className="w-full bg-indigo-600 hover:bg-indigo-700 text-white transition-all"
+              className="w-full bg-indigo-600 hover:bg-indigo-700 text-white transition-all cursor-pointer"
               disabled={isLoading}
             >
               {isLoading ? (
