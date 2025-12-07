@@ -31,7 +31,12 @@ export function AudioPlayer({ audioUrl, className }: AudioPlayerProps) {
       barRadius: 3,
     });
 
-    wavesurfer.current.load(audioUrl).catch((err) => {
+    // Ensure audioUrl is a valid data URI if it's base64
+    const validUrl = audioUrl.startsWith('data:') || audioUrl.startsWith('http') 
+      ? audioUrl 
+      : `data:audio/mpeg;base64,${audioUrl}`;
+
+    wavesurfer.current.load(validUrl).catch((err) => {
       // Ignore abort errors which happen on cleanup
       if (err.name === 'AbortError' || err.message?.includes('aborted')) return;
       console.error("Error loading audio:", err);
@@ -63,8 +68,12 @@ export function AudioPlayer({ audioUrl, className }: AudioPlayerProps) {
   };
 
   const downloadAudio = () => {
+    const validUrl = audioUrl.startsWith('data:') || audioUrl.startsWith('http') 
+      ? audioUrl 
+      : `data:audio/mpeg;base64,${audioUrl}`;
+      
     const link = document.createElement("a");
-    link.href = audioUrl;
+    link.href = validUrl;
     link.download = "generated-audio.mp3";
     document.body.appendChild(link);
     link.click();

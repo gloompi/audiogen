@@ -16,6 +16,7 @@ export async function GET(request: Request) {
       orderBy: {
         createdAt: 'desc',
       },
+      take: 50, // Limit to last 50 items to prevent payload issues
     });
     return NextResponse.json(history);
   } catch (error) {

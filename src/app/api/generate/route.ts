@@ -5,22 +5,15 @@ import { z } from 'zod';
 const generateSchema = z.object({
   prompt: z.string().min(1),
   voiceId: z.string().min(1),
+  userId: z.string().min(1, "User ID is required"),
 });
 
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { prompt, voiceId, userId } = body;
-
-    if (!userId) {
-      return NextResponse.json(
-        { error: 'User ID is required' },
-        { status: 400 }
-      );
-    }
-
+    
     // Validate input
-    const validationResult = generateSchema.safeParse({ prompt, voiceId });
+    const validationResult = generateSchema.safeParse(body);
     
     if (!validationResult.success) {
       return NextResponse.json(
@@ -29,8 +22,9 @@ export async function POST(request: Request) {
       );
     }
 
-    const validatedPrompt = validationResult.data.prompt;
-    const validatedVoiceId = validationResult.data.voiceId;
+    const { prompt, voiceId, userId } = validationResult.data;
+    const validatedPrompt = prompt;
+    const validatedVoiceId = voiceId;
 
     // 2. Call ElevenLabs API
     const ELEVENLABS_API_KEY = process.env.ELEVENLABS_API_KEY;
