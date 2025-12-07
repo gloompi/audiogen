@@ -40,7 +40,7 @@ const VOICES = [
   { id: "JBFqnCBsd6RMkjVDRZzb", name: "Adam" },
 ];
 
-export function GeneratorForm({ onSuccess }: { onSuccess: () => void }) {
+export function GeneratorForm({ onSuccess }: { onSuccess: (newItem?: any) => void }) {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const userId = useUserSession();
@@ -73,8 +73,9 @@ export function GeneratorForm({ onSuccess }: { onSuccess: () => void }) {
         throw new Error(data.details || "Failed to generate audio");
       }
 
+      const data = await response.json();
       form.reset();
-      onSuccess();
+      onSuccess(data);
     } catch (err: unknown) {
       if (err instanceof Error) {
         setError(err.message);

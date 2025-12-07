@@ -4,9 +4,10 @@ import { GeneratorForm } from "@/components/GeneratorForm";
 import { HistoryList } from "@/components/HistoryList";
 
 export default function Home() {
-  const handleSuccess = () => {
-    // Dispatch event to refresh history
-    window.dispatchEvent(new Event('refreshHistory'));
+  const handleSuccess = (newItem?: any) => {
+    // Dispatch event to refresh history, passing the new item if available
+    const event = new CustomEvent('refreshHistory', { detail: newItem });
+    window.dispatchEvent(event);
   };
 
   return (

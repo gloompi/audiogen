@@ -47,7 +47,17 @@ export function HistoryList() {
 
   // Listen for refresh events
   useEffect(() => {
-    const handleRefresh = () => fetchHistory();
+    const handleRefresh = (event: Event) => {
+      const customEvent = event as CustomEvent;
+      if (customEvent.detail) {
+        // Optimistic update: Prepend new item without fetching
+        setHistory(prev => [customEvent.detail, ...prev]);
+      } else {
+        // Fallback: Fetch from API
+        fetchHistory();
+      }
+    };
+    
     window.addEventListener('refreshHistory', handleRefresh);
     return () => window.removeEventListener('refreshHistory', handleRefresh);
   }, [fetchHistory]);
@@ -131,7 +141,7 @@ export function HistoryList() {
               {history.map((item) => (
                 <div
                   key={item.id}
-                  className="p-4 rounded-lg bg-zinc-950/50 border border-zinc-800 space-y-3 group relative"
+                  className="p-4 rounded-lg bg-zinc-950/50 border border-zinc-800 space-y-3 group relative animate-in fade-in slide-in-from-top-4 duration-500"
                 >
                   <div className="pr-8 space-y-1">
                     <p className="text-sm text-zinc-300 line-clamp-2 font-medium">
