@@ -8,10 +8,11 @@ import { cn } from "@/lib/utils";
 
 interface AudioPlayerProps {
   audioUrl: string;
+  prompt?: string;
   className?: string;
 }
 
-export function AudioPlayer({ audioUrl, className }: AudioPlayerProps) {
+export function AudioPlayer({ audioUrl, prompt, className }: AudioPlayerProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const wavesurfer = useRef<WaveSurfer | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
@@ -72,9 +73,14 @@ export function AudioPlayer({ audioUrl, className }: AudioPlayerProps) {
       ? audioUrl 
       : `data:audio/mpeg;base64,${audioUrl}`;
       
+    // Create a safe filename from prompt or default
+    const filename = prompt 
+      ? `${prompt.slice(0, 30).replace(/[^a-z0-9]/gi, '-').toLowerCase()}.mp3`
+      : "generated-audio.mp3";
+
     const link = document.createElement("a");
     link.href = validUrl;
-    link.download = "generated-audio.mp3";
+    link.download = filename;
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);

@@ -15,4 +15,5 @@ export const CONFIG = {
     { id: "JBFqnCBsd6RMkjVDRZzb", name: "Adam" },
   ],
   DEFAULT_VOICE_ID: "JBFqnCBsd6RMkjVDRZzb",
+  MAX_CHARS: 2500,
 } as const;

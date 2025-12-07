@@ -5,7 +5,7 @@ import { z } from 'zod';
 import { CONFIG } from '@/lib/config';
 
 const generateSchema = z.object({
-  prompt: z.string().min(1),
+  prompt: z.string().min(1).max(CONFIG.MAX_CHARS),
   voiceId: z.string().min(1),
   userId: z.string().min(1, "User ID is required"),
 });
@@ -25,6 +25,34 @@ export async function POST(request: Request) {
     }
 
     const { prompt, voiceId, userId } = validationResult.data;
+    
+    // 1. Check Cache (Deduplication)
+    // Find if we generated this exact prompt with this voice for this user recently
+    const existingGeneration = await prisma.audioGeneration.findFirst({
+      where: {
+        prompt,
+        voiceId,
+        userId,
+      },
+      orderBy: {
+        createdAt: 'desc',
+      },
+    });
+
+    if (existingGeneration) {
+      // Cache Hit! Duplicate the record to bring it to the top of history
+      // This saves API costs and time
+      const record = await prisma.audioGeneration.create({
+        data: {
+          prompt,
+          voiceId,
+          userId,
+          audioData: existingGeneration.audioData,
+        },
+      });
+      return NextResponse.json(record);
+    }
+
     const validatedPrompt = prompt;
     const validatedVoiceId = voiceId;
 

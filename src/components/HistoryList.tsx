@@ -169,7 +169,10 @@ export function HistoryList() {
                     )}
                   </Button>
 
-                  <AudioPlayer audioUrl={`data:audio/mpeg;base64,${item.audioData}`} />
+                  <AudioPlayer
+                    audioUrl={`data:audio/mpeg;base64,${item.audioData}`}
+                    prompt={item.prompt}
+                  />
                 </div>
               ))}
             </div>

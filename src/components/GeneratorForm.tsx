@@ -29,7 +29,7 @@ import { useUserSession } from "@/hooks/useUserSession";
 import { CONFIG } from "@/lib/config";
 
 const formSchema = z.object({
-  prompt: z.string().min(3, "Prompt must be at least 3 characters"),
+  prompt: z.string().min(3, "Prompt must be at least 3 characters").max(CONFIG.MAX_CHARS, `Prompt must be less than ${CONFIG.MAX_CHARS} characters`),
   voiceId: z.string().min(1, "Please select a voice"),
 });
 
@@ -105,6 +105,9 @@ export function GeneratorForm({ onSuccess }: { onSuccess: (newItem?: any) => voi
                     />
                   </FormControl>
                   <FormMessage />
+                  <div className="text-xs text-zinc-500 text-right mt-1">
+                    {form.watch("prompt")?.length || 0}/{CONFIG.MAX_CHARS}
+                  </div>
                 </FormItem>
               )}
             />
